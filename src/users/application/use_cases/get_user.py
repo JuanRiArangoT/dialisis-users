@@ -1,4 +1,7 @@
 from users.application.dtos.user_output import UserOutputDTO
+from users.application.exceptions.user_exceptions import (
+    UserNotFoundApplicationError,
+)
 from users.application.ports.user_repository import UserRepositoryPort
 
 
@@ -6,11 +9,11 @@ class GetUserUseCase:
     def __init__(self, user_repository: UserRepositoryPort) -> None:
         self._user_repository = user_repository
 
-    def execute(self, user_id: str) -> UserOutputDTO | None:
+    def execute(self, user_id: str) -> UserOutputDTO:
         user = self._user_repository.get_by_id(user_id)
 
         if user is None:
-            return None
+            raise UserNotFoundApplicationError(f"User not found: {user_id}")
 
         return UserOutputDTO(
             user_id=user.id,

@@ -2,9 +2,13 @@ from fastapi import FastAPI
 
 from users.adapters.inbound.http.exceptions import (
     user_conflict_exception_handler,
+    user_not_found_exception_handler,
 )
 from users.adapters.inbound.http.routes.users import router as users_router
-from users.application.exceptions.user_exceptions import UserConflictError
+from users.application.exceptions.user_exceptions import (
+    UserConflictError,
+    UserNotFoundApplicationError,
+)
 
 app = FastAPI(
     title="Servicio de Usuarios - Diálisis",
@@ -23,4 +27,9 @@ def health():
 app.add_exception_handler(
     UserConflictError,
     user_conflict_exception_handler,
+)
+
+app.add_exception_handler(
+    UserNotFoundApplicationError,
+    user_not_found_exception_handler,
 )

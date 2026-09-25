@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
 from users.adapters.inbound.http.dependencies.database import get_db
@@ -65,12 +65,6 @@ def get_user(
 
     result = use_case.execute(user_id)
 
-    if result is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
     return UserResponse(
         user_id=result.user_id,
         auth0_user_id=result.auth0_user_id,
@@ -105,12 +99,6 @@ def update_user(
 
     result = use_case.execute(command)
 
-    if result is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
     return UserResponse(
         user_id=result.user_id,
         auth0_user_id=result.auth0_user_id,
@@ -133,10 +121,4 @@ def delete_user(
     repository = PostgresUserRepository(db)
     use_case = DeleteUserUseCase(repository)
 
-    deleted = use_case.execute(user_id)
-
-    if not deleted:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+    use_case.execute(user_id)
