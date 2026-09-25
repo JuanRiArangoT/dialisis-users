@@ -1,6 +1,7 @@
 from users.application.dtos.update_user import UpdateUserCommand
 from users.application.dtos.user_output import UserOutputDTO
 from users.application.exceptions.user_exceptions import (
+    UserConflictError,
     UserNotFoundApplicationError,
 )
 from users.application.ports.user_repository import UserRepositoryPort
@@ -16,6 +17,25 @@ class UpdateUserUseCase:
 
         if current_user is None:
             raise UserNotFoundApplicationError(f"User not found: {command.user_id}")
+
+        existing_user = self._user_repository.get_by_email_excluding_id(
+            command.email,
+            command.user_id,
+        )
+
+        if existing_user:
+            raise UserConflictError("A user with this email already exists.")
+
+        if command.numero_documento:
+            existing_user = self._user_repository.get_by_document_number_excluding_id(
+                command.numero_documento,
+                command.user_id,
+            )
+
+            if existing_user:
+                raise UserConflictError(
+                    "A user with this document number already exists."
+                )
 
         user = User(
             id=current_user.id,

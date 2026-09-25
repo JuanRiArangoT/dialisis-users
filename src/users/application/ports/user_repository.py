@@ -25,6 +25,22 @@ class UserRepositoryPort(ABC):
         pass
 
     @abstractmethod
+    def get_by_email_excluding_id(
+        self,
+        email: str,
+        user_id: str,
+    ) -> User | None:
+        pass
+
+    @abstractmethod
+    def get_by_document_number_excluding_id(
+        self,
+        numero_documento: str,
+        user_id: str,
+    ) -> User | None:
+        pass
+
+    @abstractmethod
     def update(self, user: User) -> User:
         pass
 

@@ -109,3 +109,37 @@ class PostgresUserRepository(UserRepositoryPort):
             return None
 
         return self._to_entity(model)
+
+    def get_by_email_excluding_id(
+        self,
+        email: str,
+        user_id: str,
+    ) -> User | None:
+        statement = select(UserModel).where(
+            UserModel.email == email,
+            UserModel.id != user_id,
+        )
+
+        model = self._session.scalar(statement)
+
+        if model is None:
+            return None
+
+        return self._to_entity(model)
+
+    def get_by_document_number_excluding_id(
+        self,
+        numero_documento: str,
+        user_id: str,
+    ) -> User | None:
+        statement = select(UserModel).where(
+            UserModel.numero_documento == numero_documento,
+            UserModel.id != user_id,
+        )
+
+        model = self._session.scalar(statement)
+
+        if model is None:
+            return None
+
+        return self._to_entity(model)
