@@ -1,12 +1,9 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass(frozen=True)
-class User:
-    id: str
+class CreateUserRequest(BaseModel):
     auth0_user_id: str
     email: str
     full_name: str
     tipo_documento: str | None = None
     numero_documento: str | None = None
-    is_active: bool = True

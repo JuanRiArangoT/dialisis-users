@@ -8,7 +8,6 @@ from .models import UserModel
 
 
 class PostgresUserRepository(UserRepositoryPort):
-
     def __init__(self, session: Session) -> None:
         self._session = session
 
@@ -38,9 +37,7 @@ class PostgresUserRepository(UserRepositoryPort):
         return self._to_entity(model)
 
     def get_by_auth0_id(self, auth0_user_id: str) -> User | None:
-        statement = select(UserModel).where(
-            UserModel.auth0_user_id == auth0_user_id
-        )
+        statement = select(UserModel).where(UserModel.auth0_user_id == auth0_user_id)
 
         model = self._session.scalar(statement)
 
@@ -50,9 +47,7 @@ class PostgresUserRepository(UserRepositoryPort):
         return self._to_entity(model)
 
     def get_by_email(self, email: str) -> User | None:
-        statement = select(UserModel).where(
-            UserModel.email == email
-        )
+        statement = select(UserModel).where(UserModel.email == email)
 
         model = self._session.scalar(statement)
 

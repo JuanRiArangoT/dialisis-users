@@ -19,3 +19,11 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/users"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.16.9",
+]
+
+[tool.ruff.lint]
+ignore = ["B008"]

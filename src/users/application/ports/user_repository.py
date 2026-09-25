@@ -4,7 +4,6 @@ from users.domain.entities.user import User
 
 
 class UserRepositoryPort(ABC):
-
     @abstractmethod
     def create(self, user: User) -> User:
         pass

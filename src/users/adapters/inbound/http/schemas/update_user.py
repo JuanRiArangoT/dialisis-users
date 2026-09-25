@@ -1,10 +1,7 @@
-from dataclasses import dataclass
+from pydantic import BaseModel
 
 
-@dataclass(frozen=True)
-class User:
-    id: str
-    auth0_user_id: str
+class UpdateUserRequest(BaseModel):
     email: str
     full_name: str
     tipo_documento: str | None = None
