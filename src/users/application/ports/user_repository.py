@@ -21,6 +21,10 @@ class UserRepositoryPort(ABC):
         pass
 
     @abstractmethod
+    def get_by_document_number(self, numero_documento: str) -> User | None:
+        pass
+
+    @abstractmethod
     def update(self, user: User) -> User:
         pass
 

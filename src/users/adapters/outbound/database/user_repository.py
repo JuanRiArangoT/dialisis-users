@@ -94,3 +94,18 @@ class PostgresUserRepository(UserRepositoryPort):
             numero_documento=model.numero_documento,
             is_active=model.is_active,
         )
+
+    def get_by_document_number(
+        self,
+        numero_documento: str,
+    ) -> User | None:
+        statement = select(UserModel).where(
+            UserModel.numero_documento == numero_documento
+        )
+
+        model = self._session.scalar(statement)
+
+        if model is None:
+            return None
+
+        return self._to_entity(model)

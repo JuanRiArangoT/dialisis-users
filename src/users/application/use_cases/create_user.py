@@ -1,5 +1,7 @@
 from uuid import uuid4
 
+from users.application.exceptions.user_exceptions import UserConflictError
+
 from users.application.dtos.create_user import CreateUserCommand
 from users.application.dtos.user_output import UserOutputDTO
 from users.application.ports.user_repository import UserRepositoryPort
@@ -19,6 +21,22 @@ class CreateUserUseCase:
             tipo_documento=command.tipo_documento,
             numero_documento=command.numero_documento,
         )
+
+        if self._user_repository.get_by_auth0_id(command.auth0_user_id):
+            raise UserConflictError("A user with this Auth0 ID already exists.")
+
+        if self._user_repository.get_by_email(command.email):
+            raise UserConflictError("A user with this email already exists.")
+
+        if command.numero_documento:
+            existing_user = self._user_repository.get_by_document_number(
+                command.numero_documento
+            )
+
+            if existing_user:
+                raise UserConflictError(
+                    "A user with this document number already exists."
+                )
 
         created_user = self._user_repository.create(user)
 
