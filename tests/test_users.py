@@ -2,7 +2,18 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
+from users.adapters.inbound.http.dependencies.auth0_jwt import get_current_user
 from users.main import app
+
+
+def mock_current_user() -> dict:
+    return {
+        "sub": "auth0|test-user",
+        "email": "test@dialisis.test",
+    }
+
+
+app.dependency_overrides[get_current_user] = mock_current_user
 
 client = TestClient(app)
 

@@ -7,6 +7,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     database_url: str
 
+    auth0_domain: str
+    auth0_audience: str
+    auth0_client_id: str
+    auth0_client_secret: str
+    auth0_api_audience: str
+
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env"),
         env_file_encoding="utf-8",
