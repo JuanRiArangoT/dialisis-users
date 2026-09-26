@@ -341,3 +341,29 @@ def test_delete_user_forbidden_for_different_authenticated_user(
 
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
+
+def test_get_current_user_profile(authenticated_user):
+    auth0_user_id = f"auth0|me-{uuid4()}"
+    email = f"me-{uuid4()}@dialisis.test"
+
+    create_response = client.post(
+        "/users",
+        json={
+            "auth0_user_id": auth0_user_id,
+            "email": email,
+            "full_name": "Usuario Actual",
+            "tipo_documento": "CC",
+            "numero_documento": str(uuid4().int)[:10],
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    authenticated_user(auth0_user_id, email)
+
+    response = client.get("/users/me")
+
+    assert response.status_code == 200
+    assert response.json()["auth0_user_id"] == auth0_user_id
+    assert response.json()["email"] == email
+    assert response.json()["full_name"] == "Usuario Actual"

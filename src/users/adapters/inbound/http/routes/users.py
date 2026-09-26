@@ -52,6 +52,27 @@ def create_user(
         is_active=result.is_active,
     )
 
+@router.get("/me", response_model=UserResponse)
+def get_current_user_profile(
+    current_user: dict = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserResponse:
+    repository = PostgresUserRepository(db)
+    use_case = GetUserUseCase(repository)
+
+    result = use_case.execute(
+        auth0_user_id=current_user["sub"],
+    )
+
+    return UserResponse(
+        user_id=result.user_id,
+        auth0_user_id=result.auth0_user_id,
+        email=result.email,
+        full_name=result.full_name,
+        tipo_documento=result.tipo_documento,
+        numero_documento=result.numero_documento,
+        is_active=result.is_active,
+    )
 
 @router.get(
     "/{user_id}",
