@@ -73,7 +73,6 @@ def test_get_user(authenticated_user):
     assert data["full_name"] == "Usuario GET"
 
 def test_update_user(authenticated_user):
-    authenticated_user("auth0|test-user")
     auth0_user_id = f"auth0|test-{uuid4()}"
     email = f"test-{uuid4()}@dialisis.test"
 
@@ -91,6 +90,8 @@ def test_update_user(authenticated_user):
     assert create_response.status_code == 201
 
     user_id = create_response.json()["user_id"]
+
+    authenticated_user(auth0_user_id, email)
 
     response = client.put(
         f"/users/{user_id}",
@@ -113,12 +114,14 @@ def test_update_user(authenticated_user):
     assert data["is_active"] is True
 
 def test_delete_user(authenticated_user):
-    authenticated_user("auth0|test-user")
+    auth0_user_id = f"auth0|test-{uuid4()}"
+    email = f"test-{uuid4()}@dialisis.test"
+
     create_response = client.post(
         "/users",
         json={
-            "auth0_user_id": f"auth0|test-{uuid4()}",
-            "email": f"test-{uuid4()}@dialisis.test",
+            "auth0_user_id": auth0_user_id,
+            "email": email,
             "full_name": "Usuario a Eliminar",
             "tipo_documento": "CC",
             "numero_documento": str(uuid4().int)[:10],
@@ -129,13 +132,11 @@ def test_delete_user(authenticated_user):
 
     user_id = create_response.json()["user_id"]
 
+    authenticated_user(auth0_user_id, email)
+
     response = client.delete(f"/users/{user_id}")
 
     assert response.status_code == 204
-
-    get_response = client.get(f"/users/{user_id}")
-
-    assert get_response.status_code == 404
 
 def test_get_user_not_found(authenticated_user):
     authenticated_user("auth0|test-user")
@@ -267,6 +268,76 @@ def test_get_user_forbidden_for_different_authenticated_user(authenticated_user)
     )
 
     response = client.get(f"/users/{user_id}")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found"}
+
+def test_update_user_forbidden_for_different_authenticated_user(
+    authenticated_user,
+):
+    owner_auth0_user_id = f"auth0|owner-{uuid4()}"
+    owner_email = f"owner-{uuid4()}@dialisis.test"
+
+    create_response = client.post(
+        "/users",
+        json={
+            "auth0_user_id": owner_auth0_user_id,
+            "email": owner_email,
+            "full_name": "Usuario Propietario",
+            "tipo_documento": "CC",
+            "numero_documento": str(uuid4().int)[:10],
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    user_id = create_response.json()["user_id"]
+
+    authenticated_user(
+        "auth0|otro-usuario",
+        "otro@dialisis.test",
+    )
+
+    response = client.put(
+        f"/users/{user_id}",
+        json={
+            "email": owner_email,
+            "full_name": "Usuario Modificado",
+            "tipo_documento": "CC",
+            "numero_documento": str(uuid4().int)[:10],
+            "is_active": True,
+        },
+    )
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found"}
+
+def test_delete_user_forbidden_for_different_authenticated_user(
+    authenticated_user,
+):
+    owner_auth0_user_id = f"auth0|owner-{uuid4()}"
+
+    create_response = client.post(
+        "/users",
+        json={
+            "auth0_user_id": owner_auth0_user_id,
+            "email": f"owner-{uuid4()}@dialisis.test",
+            "full_name": "Usuario Propietario",
+            "tipo_documento": "CC",
+            "numero_documento": str(uuid4().int)[:10],
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    user_id = create_response.json()["user_id"]
+
+    authenticated_user(
+        "auth0|otro-usuario",
+        "otro@dialisis.test",
+    )
+
+    response = client.delete(f"/users/{user_id}")
 
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}

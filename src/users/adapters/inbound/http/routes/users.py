@@ -89,6 +89,7 @@ def update_user(
     user_id: str,
     request: UpdateUserRequest,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ) -> UserResponse:
     repository = PostgresUserRepository(db)
     use_case = UpdateUserUseCase(repository)
@@ -102,7 +103,10 @@ def update_user(
         is_active=request.is_active,
     )
 
-    result = use_case.execute(command)
+    result = use_case.execute(
+        command=command,
+        auth0_user_id=current_user["sub"],
+    )
 
     return UserResponse(
         user_id=result.user_id,
@@ -122,8 +126,12 @@ def update_user(
 def delete_user(
     user_id: str,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ) -> None:
     repository = PostgresUserRepository(db)
     use_case = DeleteUserUseCase(repository)
 
-    use_case.execute(user_id)
+    use_case.execute(
+        user_id=user_id,
+        auth0_user_id=current_user["sub"],
+    )

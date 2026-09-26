@@ -13,11 +13,20 @@ class UpdateUserUseCase:
     def __init__(self, user_repository: UserRepositoryPort) -> None:
         self._user_repository = user_repository
 
-    def execute(self, command: UpdateUserCommand) -> UserOutputDTO:
+    def execute(
+        self,
+        command: UpdateUserCommand,
+        auth0_user_id: str | None = None,
+    ) -> UserOutputDTO:
         current_user = self._user_repository.get_by_id(command.user_id)
 
         if current_user is None:
             raise UserNotFoundApplicationError(f"User not found: {command.user_id}")
+
+        if auth0_user_id is not None and current_user.auth0_user_id != auth0_user_id:
+            raise UserNotFoundApplicationError(
+                f"User not found: {command.user_id}"
+            )
 
         existing_user = self._user_repository.get_by_email_excluding_id(
             command.email,
