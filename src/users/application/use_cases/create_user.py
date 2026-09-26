@@ -1,11 +1,11 @@
 from uuid import uuid4
 
-from users.application.exceptions.user_exceptions import UserConflictError
-
 from users.application.dtos.create_user import CreateUserCommand
 from users.application.dtos.user_output import UserOutputDTO
+from users.application.exceptions.user_exceptions import UserConflictError
 from users.application.ports.user_repository import UserRepositoryPort
 from users.domain.entities.user import User
+from users.domain.exceptions.user_exceptions import UserAlreadyExistsError
 
 
 class CreateUserUseCase:
@@ -38,7 +38,10 @@ class CreateUserUseCase:
                     "A user with this document number already exists."
                 )
 
-        created_user = self._user_repository.create(user)
+        try:
+            created_user = self._user_repository.create(user)
+        except UserAlreadyExistsError as exc:
+            raise UserConflictError(str(exc)) from exc
 
         return UserOutputDTO(
             user_id=created_user.id,

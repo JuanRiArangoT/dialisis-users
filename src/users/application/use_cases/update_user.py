@@ -6,6 +6,7 @@ from users.application.exceptions.user_exceptions import (
 )
 from users.application.ports.user_repository import UserRepositoryPort
 from users.domain.entities.user import User
+from users.domain.exceptions.user_exceptions import UserAlreadyExistsError
 
 
 class UpdateUserUseCase:
@@ -47,7 +48,10 @@ class UpdateUserUseCase:
             is_active=command.is_active,
         )
 
-        updated_user = self._user_repository.update(user)
+        try:
+            updated_user = self._user_repository.update(user)
+        except UserAlreadyExistsError as exc:
+            raise UserConflictError(str(exc)) from exc
 
         return UserOutputDTO(
             user_id=updated_user.id,

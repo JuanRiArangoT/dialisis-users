@@ -1,8 +1,10 @@
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from users.application.ports.user_repository import UserRepositoryPort
 from users.domain.entities.user import User
+from users.domain.exceptions.user_exceptions import UserAlreadyExistsError
 
 from .models import UserModel
 
@@ -22,9 +24,20 @@ class PostgresUserRepository(UserRepositoryPort):
             is_active=user.is_active,
         )
 
-        self._session.add(model)
-        self._session.commit()
-        self._session.refresh(model)
+        try:
+            self._session.add(model)
+            self._session.commit()
+            self._session.refresh(model)
+
+        except IntegrityError as exc:
+            self._session.rollback()
+
+            if getattr(exc.orig, "sqlstate", None) == "23505":
+                raise UserAlreadyExistsError(
+                    "A user with this email, Auth0 ID, or document number already exists."
+                ) from exc
+
+            raise
 
         return self._to_entity(model)
 
@@ -69,8 +82,19 @@ class PostgresUserRepository(UserRepositoryPort):
         model.numero_documento = user.numero_documento
         model.is_active = user.is_active
 
-        self._session.commit()
-        self._session.refresh(model)
+        try:
+            self._session.commit()
+            self._session.refresh(model)
+
+        except IntegrityError as exc:
+            self._session.rollback()
+
+            if getattr(exc.orig, "sqlstate", None) == "23505":
+                raise UserAlreadyExistsError(
+                    "A user with this email, Auth0 ID, or document number already exists."
+                ) from exc
+
+            raise
 
         return self._to_entity(model)
 
