@@ -65,7 +65,10 @@ def get_user(
     repository = PostgresUserRepository(db)
     use_case = GetUserUseCase(repository)
 
-    result = use_case.execute(user_id)
+    result = use_case.execute(
+        user_id=user_id,
+        auth0_user_id=current_user["sub"],
+    )
 
     return UserResponse(
         user_id=result.user_id,
