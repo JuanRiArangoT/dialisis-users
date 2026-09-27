@@ -6,9 +6,11 @@ from users.adapters.inbound.http.dependencies.database import get_db
 from users.adapters.inbound.http.schemas.create_user import CreateUserRequest
 from users.adapters.inbound.http.schemas.update_user import UpdateUserRequest
 from users.adapters.inbound.http.schemas.user_response import UserResponse
+from users.adapters.outbound.auth0.auth0_client import Auth0Client
 from users.adapters.outbound.database.user_repository import PostgresUserRepository
 from users.application.dtos.create_user import CreateUserCommand
 from users.application.dtos.update_user import UpdateUserCommand
+from users.application.services.user_auth0_service import UserAuth0Service
 from users.application.use_cases.create_user import CreateUserUseCase
 from users.application.use_cases.delete_user import DeleteUserUseCase
 from users.application.use_cases.get_user import GetUserUseCase
@@ -113,7 +115,13 @@ def update_user(
     current_user: dict = Depends(get_current_user),
 ) -> UserResponse:
     repository = PostgresUserRepository(db)
-    use_case = UpdateUserUseCase(repository)
+    auth0_client = Auth0Client()
+    auth0_service = UserAuth0Service(auth0_client)
+
+    use_case = UpdateUserUseCase(
+        user_repository=repository,
+        auth0_service=auth0_service,
+    )
 
     command = UpdateUserCommand(
         user_id=user_id,

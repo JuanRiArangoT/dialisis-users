@@ -14,3 +14,10 @@ class Auth0ClientPort(Protocol):
         connection: str,
     ) -> Auth0UserResponse:
         ...
+
+    def update_user(
+        self,
+        user_id: str,
+        email: str,
+    ) -> Auth0UserResponse:
+        ...

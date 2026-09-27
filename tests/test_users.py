@@ -1,8 +1,10 @@
+from unittest.mock import patch
 from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
 from users.adapters.inbound.http.dependencies.auth0_jwt import get_current_user
+from users.application.dtos.auth0_user import Auth0UserResponse
 from users.main import app
 
 
@@ -367,3 +369,56 @@ def test_get_current_user_profile(authenticated_user):
     assert response.json()["auth0_user_id"] == auth0_user_id
     assert response.json()["email"] == email
     assert response.json()["full_name"] == "Usuario Actual"
+
+def test_update_user_email_updates_auth0(authenticated_user):
+    auth0_user_id = f"auth0|test-{uuid4()}"
+    old_email = f"old-{uuid4()}@dialisis.test"
+    new_email = f"new-{uuid4()}@dialisis.test"
+
+    create_response = client.post(
+        "/users",
+        json={
+            "auth0_user_id": auth0_user_id,
+            "email": old_email,
+            "full_name": "Usuario Email",
+            "tipo_documento": "CC",
+            "numero_documento": str(uuid4().int)[:10],
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    user_id = create_response.json()["user_id"]
+
+    authenticated_user(auth0_user_id, old_email)
+
+    with patch(
+        "users.adapters.outbound.auth0.auth0_client.Auth0Client.update_user"
+    ) as mock_update_user:
+        mock_update_user.return_value = Auth0UserResponse(
+            user_id=auth0_user_id,
+            email=new_email,
+        )
+
+        response = client.put(
+            f"/users/{user_id}",
+            json={
+                "email": new_email,
+                "full_name": "Usuario Email Actualizado",
+                "tipo_documento": "CC",
+                "numero_documento": str(uuid4().int)[:10],
+                "is_active": True,
+            },
+        )
+
+    assert response.status_code == 200
+
+    mock_update_user.assert_called_once_with(
+        user_id=auth0_user_id,
+        email=new_email,
+    )
+
+    data = response.json()
+
+    assert data["email"] == new_email
+    assert data["full_name"] == "Usuario Email Actualizado"

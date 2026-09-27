@@ -3,6 +3,7 @@ import time
 import httpx
 
 from users.application.dtos.auth0_user import Auth0UserResponse
+from users.application.exceptions.user_exceptions import UserConflictError
 from users.application.ports.auth0_client import Auth0ClientPort
 from users.infrastructure.config.settings import settings
 
@@ -65,6 +66,46 @@ class Auth0Client(Auth0ClientPort):
         )
 
         if response.is_error:
+            raise RuntimeError(
+                f"Auth0 error ({response.status_code}): {response.text}"
+            )
+
+        data = response.json()
+
+        return Auth0UserResponse(
+            user_id=data["user_id"],
+            email=data["email"],
+        )
+
+    def update_user(
+        self,
+        user_id: str,
+        email: str,
+    ) -> Auth0UserResponse:
+        token = self.get_management_token()
+
+        payload = {
+            "email": email,
+        }
+
+        response = httpx.patch(
+            f"https://{settings.auth0_domain}/api/v2/users/{user_id}",
+            headers={
+                "Authorization": f"Bearer {token}",
+            },
+            json=payload,
+            timeout=10.0,
+        )
+
+        if response.is_error:
+            if (
+                response.status_code == 400
+                and "The specified new email already exists" in response.text
+            ):
+                raise UserConflictError(
+                    "A user with this email already exists."
+                )
+
             raise RuntimeError(
                 f"Auth0 error ({response.status_code}): {response.text}"
             )

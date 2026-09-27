@@ -4,9 +4,11 @@ version = "0.1.0"
 description = "Users microservice for the Dialisis platform"
 readme = "README.md"
 requires-python = ">=3.13"
+
 dependencies = [
     "alembic>=1.20.0",
     "fastapi>=0.141.1",
+    "httpx>=0.28.1",
     "psycopg[binary]>=3.3.6",
     "pydantic-settings>=2.15.0",
     "pyjwt[crypto]>=2.15.0",
@@ -23,7 +25,6 @@ packages = ["src/users"]
 
 [dependency-groups]
 dev = [
-    "httpx>=0.28.1",
     "pytest>=9.1.1",
     "ruff>=0.16.9",
 ]

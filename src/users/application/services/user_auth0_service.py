@@ -19,3 +19,13 @@ class UserAuth0Service:
             password=password,
             connection=connection,
         )
+
+    def update_identity(
+        self,
+        user_id: str,
+        email: str,
+    ) -> Auth0UserResponse:
+        return self._auth0_client.update_user(
+            user_id=user_id,
+            email=email,
+        )

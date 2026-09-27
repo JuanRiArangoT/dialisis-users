@@ -5,13 +5,19 @@ from users.application.exceptions.user_exceptions import (
     UserNotFoundApplicationError,
 )
 from users.application.ports.user_repository import UserRepositoryPort
+from users.application.services.user_auth0_service import UserAuth0Service
 from users.domain.entities.user import User
 from users.domain.exceptions.user_exceptions import UserAlreadyExistsError
 
 
 class UpdateUserUseCase:
-    def __init__(self, user_repository: UserRepositoryPort) -> None:
+    def __init__(
+        self,
+        user_repository: UserRepositoryPort,
+        auth0_service: UserAuth0Service,
+    ) -> None:
         self._user_repository = user_repository
+        self._auth0_service = auth0_service
 
     def execute(
         self,
@@ -46,6 +52,12 @@ class UpdateUserUseCase:
                 raise UserConflictError(
                     "A user with this document number already exists."
                 )
+
+        if command.email != current_user.email:
+            self._auth0_service.update_identity(
+                user_id=current_user.auth0_user_id,
+                email=command.email,
+            )
 
         user = User(
             id=current_user.id,
