@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     auth0_client_id: str
     auth0_client_secret: str
     auth0_api_audience: str
+    roles_service_url: str
 
     model_config = SettingsConfigDict(
         env_file=os.getenv("ENV_FILE", ".env"),

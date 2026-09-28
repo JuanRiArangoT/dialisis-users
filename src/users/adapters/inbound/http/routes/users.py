@@ -16,6 +16,7 @@ from users.application.use_cases.create_user import CreateUserUseCase
 from users.application.use_cases.delete_user import DeleteUserUseCase
 from users.application.use_cases.get_user import GetUserUseCase
 from users.application.use_cases.update_user import UpdateUserUseCase
+from users.infrastructure.config.settings import settings
 
 router = APIRouter(
     prefix="/users",
@@ -33,7 +34,7 @@ def create_user(
     db: Session = Depends(get_db),
 ) -> UserResponse:
     repository = PostgresUserRepository(db)
-    role_service = RoleHttpClient("http://localhost:8002")
+    role_service = RoleHttpClient(settings.roles_service_url)
 
     use_case = CreateUserUseCase(
         repository,
@@ -129,7 +130,7 @@ def update_user(
     repository = PostgresUserRepository(db)
     auth0_client = Auth0Client()
     auth0_service = UserAuth0Service(auth0_client)
-    role_service = RoleHttpClient("http://localhost:8002")
+    role_service = RoleHttpClient(settings.roles_service_url)
 
     use_case = UpdateUserUseCase(
         user_repository=repository,
