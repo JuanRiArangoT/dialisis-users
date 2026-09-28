@@ -29,5 +29,6 @@ class GetUserUseCase:
             full_name=user.full_name,
             tipo_documento=user.tipo_documento,
             numero_documento=user.numero_documento,
+            role_id=user.role_id,
             is_active=user.is_active,
         )

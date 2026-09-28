@@ -35,17 +35,57 @@ class UpdateUserUseCase:
         if auth0_user_id is not None and current_user.auth0_user_id != auth0_user_id:
             raise UserNotFoundApplicationError(f"User not found: {command.user_id}")
 
-        existing_user = self._user_repository.get_by_email_excluding_id(
-            command.email,
-            command.user_id,
+        email = (
+            command.email if command.email is not None else current_user.email
         )
 
-        if existing_user:
-            raise UserConflictError("A user with this email already exists.")
+        full_name = (
+            command.full_name
+            if command.full_name is not None
+            else current_user.full_name
+        )
 
-        if command.numero_documento:
+        tipo_documento = (
+            command.tipo_documento
+            if command.tipo_documento is not None
+            else current_user.tipo_documento
+        )
+
+        numero_documento = (
+            command.numero_documento
+            if command.numero_documento is not None
+            else current_user.numero_documento
+        )
+
+        role_id = (
+            command.role_id
+            if command.role_id is not None
+            else current_user.role_id
+        )
+
+        is_active = (
+            command.is_active
+            if command.is_active is not None
+            else current_user.is_active
+        )
+
+        if email != current_user.email:
+            existing_user = self._user_repository.get_by_email_excluding_id(
+                email,
+                command.user_id,
+            )
+
+            if existing_user:
+                raise UserConflictError("A user with this email already exists.")
+
+            self._auth0_service.update_identity(
+                user_id=current_user.auth0_user_id,
+                email=email,
+            )
+
+        if numero_documento and numero_documento != current_user.numero_documento:
             existing_user = self._user_repository.get_by_document_number_excluding_id(
-                command.numero_documento,
+                numero_documento,
                 command.user_id,
             )
 
@@ -54,28 +94,22 @@ class UpdateUserUseCase:
                     "A user with this document number already exists."
                 )
 
-        if command.email != current_user.email:
-            self._auth0_service.update_identity(
-                user_id=current_user.auth0_user_id,
-                email=command.email,
-            )
-
-        if command.role_id is not None and not self._role_service.role_exists(
-            command.role_id
+        if (
+            role_id is not None
+            and role_id != current_user.role_id
+            and not self._role_service.role_exists(role_id)
         ):
-            raise UserConflictError(f"Role not found: {command.role_id}")
+            raise UserConflictError(f"Role not found: {role_id}")
 
         user = User(
             id=current_user.id,
             auth0_user_id=current_user.auth0_user_id,
-            email=command.email,
-            full_name=command.full_name,
-            tipo_documento=command.tipo_documento,
-            numero_documento=command.numero_documento,
-            role_id=(
-                command.role_id if command.role_id is not None else current_user.role_id
-            ),
-            is_active=command.is_active,
+            email=email,
+            full_name=full_name,
+            tipo_documento=tipo_documento,
+            numero_documento=numero_documento,
+            role_id=role_id,
+            is_active=is_active,
         )
 
         try:
