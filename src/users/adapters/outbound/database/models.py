@@ -1,3 +1,6 @@
+from collections.abc import Mapping
+from typing import ClassVar
+
 from sqlalchemy import Boolean, String
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -8,6 +11,7 @@ class Base(DeclarativeBase):
 
 class UserModel(Base):
     __tablename__ = "users"
+    __table_args__: ClassVar[Mapping[str, str]] = {"schema": "users"}
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     auth0_user_id: Mapped[str] = mapped_column(
