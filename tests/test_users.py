@@ -354,30 +354,41 @@ def test_delete_user_forbidden_for_different_authenticated_user(
 
 
 def test_get_current_user_profile(authenticated_user):
-    auth0_user_id = f"auth0|me-{uuid4()}"
-    email = f"me-{uuid4()}@dialisis.test"
+    with (
+        patch(
+            "users.adapters.outbound.roles.role_http_client.RoleHttpClient.role_exists",
+            return_value=True,
+        ),
+        patch(
+            "users.adapters.outbound.roles.role_http_client.RoleHttpClient.has_permission",
+            return_value=True,
+        ),
+    ):
+        auth0_user_id = f"auth0|me-{uuid4()}"
+        email = f"me-{uuid4()}@dialisis.test"
 
-    create_response = client.post(
-        "/users",
-        json={
-            "auth0_user_id": auth0_user_id,
-            "email": email,
-            "full_name": "Usuario Actual",
-            "tipo_documento": "CC",
-            "numero_documento": str(uuid4().int)[:10],
-        },
-    )
+        create_response = client.post(
+            "/users",
+            json={
+                "auth0_user_id": auth0_user_id,
+                "email": email,
+                "full_name": "Usuario Actual",
+                "tipo_documento": "CC",
+                "numero_documento": str(uuid4().int)[:10],
+                "role_id": "6baa23b1-8dbc-4c82-b3c8-03cb6f2d398e",
+            },
+        )
 
-    assert create_response.status_code == 201
+        assert create_response.status_code == 201
 
-    authenticated_user(auth0_user_id, email)
+        authenticated_user(auth0_user_id, email)
 
-    response = client.get("/users/me")
+        response = client.get("/users/me")
 
-    assert response.status_code == 200
-    assert response.json()["auth0_user_id"] == auth0_user_id
-    assert response.json()["email"] == email
-    assert response.json()["full_name"] == "Usuario Actual"
+        assert response.status_code == 200
+        assert response.json()["auth0_user_id"] == auth0_user_id
+        assert response.json()["email"] == email
+        assert response.json()["full_name"] == "Usuario Actual"
 
 
 def test_update_user_email_updates_auth0(authenticated_user):
