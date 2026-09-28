@@ -13,7 +13,7 @@ services:
     image: postgres:16
     container_name: dialisis-users-db
     environment:
-      POSTGRES_DB: dialisis_users
+      POSTGRES_DB: dialisis
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
