@@ -22,6 +22,7 @@ class PostgresUserRepository(UserRepositoryPort):
             tipo_documento=user.tipo_documento,
             numero_documento=user.numero_documento,
             is_active=user.is_active,
+            role_id=user.role_id,
         )
 
         try:
@@ -80,6 +81,7 @@ class PostgresUserRepository(UserRepositoryPort):
         model.full_name = user.full_name
         model.tipo_documento = user.tipo_documento
         model.numero_documento = user.numero_documento
+        model.role_id = user.role_id
         model.is_active = user.is_active
 
         try:
@@ -116,6 +118,7 @@ class PostgresUserRepository(UserRepositoryPort):
             full_name=model.full_name,
             tipo_documento=model.tipo_documento,
             numero_documento=model.numero_documento,
+            role_id=model.role_id,
             is_active=model.is_active,
         )
 

@@ -66,6 +66,11 @@ class UpdateUserUseCase:
             full_name=command.full_name,
             tipo_documento=command.tipo_documento,
             numero_documento=command.numero_documento,
+            role_id=(
+                command.role_id
+                if command.role_id is not None
+                else current_user.role_id
+            ),
             is_active=command.is_active,
         )
 
@@ -81,5 +86,6 @@ class UpdateUserUseCase:
             full_name=updated_user.full_name,
             tipo_documento=updated_user.tipo_documento,
             numero_documento=updated_user.numero_documento,
+            role_id=updated_user.role_id,
             is_active=updated_user.is_active,
         )

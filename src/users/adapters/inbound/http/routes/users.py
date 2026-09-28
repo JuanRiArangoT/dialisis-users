@@ -40,6 +40,7 @@ def create_user(
         full_name=request.full_name,
         tipo_documento=request.tipo_documento,
         numero_documento=request.numero_documento,
+        role_id=request.role_id,
     )
 
     result = use_case.execute(command)
@@ -51,6 +52,7 @@ def create_user(
         full_name=result.full_name,
         tipo_documento=result.tipo_documento,
         numero_documento=result.numero_documento,
+        role_id=result.role_id,
         is_active=result.is_active,
     )
 
@@ -73,6 +75,7 @@ def get_current_user_profile(
         full_name=result.full_name,
         tipo_documento=result.tipo_documento,
         numero_documento=result.numero_documento,
+        role_id=result.role_id,
         is_active=result.is_active,
     )
 
@@ -100,6 +103,7 @@ def get_user(
         full_name=result.full_name,
         tipo_documento=result.tipo_documento,
         numero_documento=result.numero_documento,
+        role_id=result.role_id,
         is_active=result.is_active,
     )
 
@@ -129,6 +133,7 @@ def update_user(
         full_name=request.full_name,
         tipo_documento=request.tipo_documento,
         numero_documento=request.numero_documento,
+        role_id=request.role_id,
         is_active=request.is_active,
     )
 
@@ -144,6 +149,7 @@ def update_user(
         full_name=result.full_name,
         tipo_documento=result.tipo_documento,
         numero_documento=result.numero_documento,
+        role_id=result.role_id,
         is_active=result.is_active,
     )
 

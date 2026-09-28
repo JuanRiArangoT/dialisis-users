@@ -36,8 +36,13 @@ class UserModel(Base):
         nullable=True,
         unique=True,
     )
+    role_id: Mapped[str | None] = mapped_column(
+        String(36),
+        nullable=True,
+    )
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
         nullable=False,
     )
+    

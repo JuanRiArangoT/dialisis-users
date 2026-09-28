@@ -7,3 +7,4 @@ class CreateUserRequest(BaseModel):
     full_name: str
     tipo_documento: str | None = None
     numero_documento: str | None = None
+    role_id: str | None = None

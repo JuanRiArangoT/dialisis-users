@@ -20,6 +20,7 @@ class CreateUserUseCase:
             full_name=command.full_name,
             tipo_documento=command.tipo_documento,
             numero_documento=command.numero_documento,
+            role_id=command.role_id,
         )
 
         if self._user_repository.get_by_auth0_id(command.auth0_user_id):
@@ -50,5 +51,6 @@ class CreateUserUseCase:
             full_name=created_user.full_name,
             tipo_documento=created_user.tipo_documento,
             numero_documento=created_user.numero_documento,
+            role_id=created_user.role_id,
             is_active=created_user.is_active,
         )

@@ -422,3 +422,50 @@ def test_update_user_email_updates_auth0(authenticated_user):
 
     assert data["email"] == new_email
     assert data["full_name"] == "Usuario Email Actualizado"
+
+def test_create_and_update_user_role(authenticated_user):
+    auth0_user_id = f"auth0|role-{uuid4()}"
+    email = f"role-{uuid4()}@dialisis.test"
+    role_id = str(uuid4())
+    new_role_id = str(uuid4())
+
+    create_response = client.post(
+        "/users",
+        json={
+            "auth0_user_id": auth0_user_id,
+            "email": email,
+            "full_name": "Usuario con Rol",
+            "tipo_documento": "CC",
+            "numero_documento": str(uuid4().int)[:10],
+            "role_id": role_id,
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    data = create_response.json()
+
+    assert data["role_id"] == role_id
+
+    user_id = data["user_id"]
+
+    authenticated_user(auth0_user_id, email)
+
+    response = client.put(
+        f"/users/{user_id}",
+        json={
+            "email": email,
+            "full_name": "Usuario con Rol Actualizado",
+            "tipo_documento": "CC",
+            "numero_documento": str(uuid4().int)[:10],
+            "role_id": new_role_id,
+            "is_active": True,
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["role_id"] == new_role_id
+    assert data["full_name"] == "Usuario con Rol Actualizado"

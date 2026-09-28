@@ -9,4 +9,5 @@ class UserOutputDTO:
     full_name: str
     tipo_documento: str | None
     numero_documento: str | None
-    is_active: bool
+    role_id: str | None = None
+    is_active: bool = True
