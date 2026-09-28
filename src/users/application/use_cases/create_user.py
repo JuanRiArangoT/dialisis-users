@@ -3,16 +3,27 @@ from uuid import uuid4
 from users.application.dtos.create_user import CreateUserCommand
 from users.application.dtos.user_output import UserOutputDTO
 from users.application.exceptions.user_exceptions import UserConflictError
+from users.application.ports.role_service import RoleServicePort
 from users.application.ports.user_repository import UserRepositoryPort
 from users.domain.entities.user import User
 from users.domain.exceptions.user_exceptions import UserAlreadyExistsError
 
 
 class CreateUserUseCase:
-    def __init__(self, user_repository: UserRepositoryPort) -> None:
+    def __init__(
+        self,
+        user_repository: UserRepositoryPort,
+        role_service: RoleServicePort,
+    ) -> None:
         self._user_repository = user_repository
+        self._role_service = role_service
 
     def execute(self, command: CreateUserCommand) -> UserOutputDTO:
+        if command.role_id is not None and not self._role_service.role_exists(
+            command.role_id
+        ):
+            raise UserConflictError(f"Role not found: {command.role_id}")
+
         user = User(
             id=str(uuid4()),
             auth0_user_id=command.auth0_user_id,

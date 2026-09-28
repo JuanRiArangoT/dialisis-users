@@ -8,6 +8,7 @@ from users.adapters.inbound.http.schemas.update_user import UpdateUserRequest
 from users.adapters.inbound.http.schemas.user_response import UserResponse
 from users.adapters.outbound.auth0.auth0_client import Auth0Client
 from users.adapters.outbound.database.user_repository import PostgresUserRepository
+from users.adapters.outbound.roles.role_http_client import RoleHttpClient
 from users.application.dtos.create_user import CreateUserCommand
 from users.application.dtos.update_user import UpdateUserCommand
 from users.application.services.user_auth0_service import UserAuth0Service
@@ -32,7 +33,12 @@ def create_user(
     db: Session = Depends(get_db),
 ) -> UserResponse:
     repository = PostgresUserRepository(db)
-    use_case = CreateUserUseCase(repository)
+    role_service = RoleHttpClient("http://localhost:8002")
+
+    use_case = CreateUserUseCase(
+        repository,
+        role_service,
+    )
 
     command = CreateUserCommand(
         auth0_user_id=request.auth0_user_id,
@@ -56,6 +62,7 @@ def create_user(
         is_active=result.is_active,
     )
 
+
 @router.get("/me", response_model=UserResponse)
 def get_current_user_profile(
     current_user: dict = Depends(get_current_user),
@@ -78,6 +85,7 @@ def get_current_user_profile(
         role_id=result.role_id,
         is_active=result.is_active,
     )
+
 
 @router.get(
     "/{user_id}",
@@ -121,10 +129,12 @@ def update_user(
     repository = PostgresUserRepository(db)
     auth0_client = Auth0Client()
     auth0_service = UserAuth0Service(auth0_client)
+    role_service = RoleHttpClient("http://localhost:8002")
 
     use_case = UpdateUserUseCase(
         user_repository=repository,
         auth0_service=auth0_service,
+        role_service=role_service,
     )
 
     command = UpdateUserCommand(

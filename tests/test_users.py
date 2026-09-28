@@ -74,6 +74,7 @@ def test_get_user(authenticated_user):
     assert data["email"] == email
     assert data["full_name"] == "Usuario GET"
 
+
 def test_update_user(authenticated_user):
     auth0_user_id = f"auth0|test-{uuid4()}"
     email = f"test-{uuid4()}@dialisis.test"
@@ -115,6 +116,7 @@ def test_update_user(authenticated_user):
     assert data["full_name"] == "Usuario Actualizado"
     assert data["is_active"] is True
 
+
 def test_delete_user(authenticated_user):
     auth0_user_id = f"auth0|test-{uuid4()}"
     email = f"test-{uuid4()}@dialisis.test"
@@ -140,6 +142,7 @@ def test_delete_user(authenticated_user):
 
     assert response.status_code == 204
 
+
 def test_get_user_not_found(authenticated_user):
     authenticated_user("auth0|test-user")
     user_id = str(uuid4())
@@ -148,6 +151,7 @@ def test_get_user_not_found(authenticated_user):
 
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
+
 
 def test_create_user_duplicate_email():
     email = f"duplicate-{uuid4()}@dialisis.test"
@@ -181,6 +185,7 @@ def test_create_user_duplicate_email():
         "detail": "A user with this email already exists."
     }
 
+
 def test_create_user_duplicate_auth0_id():
     auth0_user_id = f"auth0|duplicate-{uuid4()}"
 
@@ -212,6 +217,7 @@ def test_create_user_duplicate_auth0_id():
     assert second_response.json() == {
         "detail": "A user with this Auth0 ID already exists."
     }
+
 
 def test_create_user_duplicate_document():
     numero_documento = str(uuid4().int)[:10]
@@ -274,6 +280,7 @@ def test_get_user_forbidden_for_different_authenticated_user(authenticated_user)
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
 
+
 def test_update_user_forbidden_for_different_authenticated_user(
     authenticated_user,
 ):
@@ -314,6 +321,7 @@ def test_update_user_forbidden_for_different_authenticated_user(
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
 
+
 def test_delete_user_forbidden_for_different_authenticated_user(
     authenticated_user,
 ):
@@ -344,6 +352,7 @@ def test_delete_user_forbidden_for_different_authenticated_user(
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found"}
 
+
 def test_get_current_user_profile(authenticated_user):
     auth0_user_id = f"auth0|me-{uuid4()}"
     email = f"me-{uuid4()}@dialisis.test"
@@ -369,6 +378,7 @@ def test_get_current_user_profile(authenticated_user):
     assert response.json()["auth0_user_id"] == auth0_user_id
     assert response.json()["email"] == email
     assert response.json()["full_name"] == "Usuario Actual"
+
 
 def test_update_user_email_updates_auth0(authenticated_user):
     auth0_user_id = f"auth0|test-{uuid4()}"
@@ -423,49 +433,79 @@ def test_update_user_email_updates_auth0(authenticated_user):
     assert data["email"] == new_email
     assert data["full_name"] == "Usuario Email Actualizado"
 
+
 def test_create_and_update_user_role(authenticated_user):
     auth0_user_id = f"auth0|role-{uuid4()}"
     email = f"role-{uuid4()}@dialisis.test"
     role_id = str(uuid4())
     new_role_id = str(uuid4())
 
-    create_response = client.post(
-        "/users",
-        json={
-            "auth0_user_id": auth0_user_id,
-            "email": email,
-            "full_name": "Usuario con Rol",
-            "tipo_documento": "CC",
-            "numero_documento": str(uuid4().int)[:10],
-            "role_id": role_id,
-        },
-    )
+    with patch(
+        "users.adapters.inbound.http.routes.users.RoleHttpClient.role_exists",
+        return_value=True,
+    ):
+        create_response = client.post(
+            "/users",
+            json={
+                "auth0_user_id": auth0_user_id,
+                "email": email,
+                "full_name": "Usuario con Rol",
+                "tipo_documento": "CC",
+                "numero_documento": str(uuid4().int)[:10],
+                "role_id": role_id,
+            },
+        )
 
-    assert create_response.status_code == 201
+        assert create_response.status_code == 201
 
-    data = create_response.json()
+        data = create_response.json()
 
-    assert data["role_id"] == role_id
+        assert data["role_id"] == role_id
 
-    user_id = data["user_id"]
+        user_id = data["user_id"]
 
-    authenticated_user(auth0_user_id, email)
+        authenticated_user(auth0_user_id, email)
 
-    response = client.put(
-        f"/users/{user_id}",
-        json={
-            "email": email,
-            "full_name": "Usuario con Rol Actualizado",
-            "tipo_documento": "CC",
-            "numero_documento": str(uuid4().int)[:10],
-            "role_id": new_role_id,
-            "is_active": True,
-        },
-    )
+        response = client.put(
+            f"/users/{user_id}",
+            json={
+                "email": email,
+                "full_name": "Usuario con Rol Actualizado",
+                "tipo_documento": "CC",
+                "numero_documento": str(uuid4().int)[:10],
+                "role_id": new_role_id,
+                "is_active": True,
+            },
+        )
 
-    assert response.status_code == 200
+        assert response.status_code == 200
 
-    data = response.json()
+        data = response.json()
 
-    assert data["role_id"] == new_role_id
-    assert data["full_name"] == "Usuario con Rol Actualizado"
+        assert data["role_id"] == new_role_id
+        assert data["full_name"] == "Usuario con Rol Actualizado"
+
+
+def test_create_user_with_nonexistent_role(authenticated_user):
+    auth0_user_id = f"auth0|invalid-role-{uuid4()}"
+    email = f"invalid-role-{uuid4()}@dialisis.test"
+    role_id = str(uuid4())
+
+    with patch(
+        "users.adapters.inbound.http.routes.users.RoleHttpClient.role_exists",
+        return_value=False,
+    ):
+        response = client.post(
+            "/users",
+            json={
+                "auth0_user_id": auth0_user_id,
+                "email": email,
+                "full_name": "Usuario Rol Inexistente",
+                "tipo_documento": "CC",
+                "numero_documento": str(uuid4().int)[:10],
+                "role_id": role_id,
+            },
+        )
+
+    assert response.status_code == 409
+    assert response.json()["detail"] == f"Role not found: {role_id}"

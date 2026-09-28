@@ -4,6 +4,7 @@ from users.application.exceptions.user_exceptions import (
     UserConflictError,
     UserNotFoundApplicationError,
 )
+from users.application.ports.role_service import RoleServicePort
 from users.application.ports.user_repository import UserRepositoryPort
 from users.application.services.user_auth0_service import UserAuth0Service
 from users.domain.entities.user import User
@@ -15,9 +16,11 @@ class UpdateUserUseCase:
         self,
         user_repository: UserRepositoryPort,
         auth0_service: UserAuth0Service,
+        role_service: RoleServicePort,
     ) -> None:
         self._user_repository = user_repository
         self._auth0_service = auth0_service
+        self._role_service = role_service
 
     def execute(
         self,
@@ -30,9 +33,7 @@ class UpdateUserUseCase:
             raise UserNotFoundApplicationError(f"User not found: {command.user_id}")
 
         if auth0_user_id is not None and current_user.auth0_user_id != auth0_user_id:
-            raise UserNotFoundApplicationError(
-                f"User not found: {command.user_id}"
-            )
+            raise UserNotFoundApplicationError(f"User not found: {command.user_id}")
 
         existing_user = self._user_repository.get_by_email_excluding_id(
             command.email,
@@ -59,6 +60,11 @@ class UpdateUserUseCase:
                 email=command.email,
             )
 
+        if command.role_id is not None and not self._role_service.role_exists(
+            command.role_id
+        ):
+            raise UserConflictError(f"Role not found: {command.role_id}")
+
         user = User(
             id=current_user.id,
             auth0_user_id=current_user.auth0_user_id,
@@ -67,9 +73,7 @@ class UpdateUserUseCase:
             tipo_documento=command.tipo_documento,
             numero_documento=command.numero_documento,
             role_id=(
-                command.role_id
-                if command.role_id is not None
-                else current_user.role_id
+                command.role_id if command.role_id is not None else current_user.role_id
             ),
             is_active=command.is_active,
         )
